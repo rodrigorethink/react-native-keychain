@@ -1,5 +1,8 @@
 package com.oblador.keychain;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -51,6 +54,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static final String FACE_SUPPORTED_NAME = "Face";
   public static final String IRIS_SUPPORTED_NAME = "Iris";
   public static final String EMPTY_STRING = "";
+  public static final String KEYCHAIN_TESTS = "RN_KEYCHAIN_TESTS";
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
 
@@ -130,6 +134,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
   /** Shared preferences storage. */
   private final PrefsStorage prefsStorage;
+  /** Shared Prefernces for device test. */
+
+  public static SharedPreferences deviceTests;
   //endregion
 
   //region Initialization
@@ -138,13 +145,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public KeychainModule(@NonNull final ReactApplicationContext reactContext) {
     super(reactContext);
     prefsStorage = new PrefsStorage(reactContext);
+    deviceTests = reactContext.getSharedPreferences(KEYCHAIN_TESTS, Context.MODE_PRIVATE);
+    boolean hasStrongBox = getReactApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
 
     addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
-    addCipherStorageToMap(new CipherStorageKeystoreAesCbc());
+    addCipherStorageToMap(new CipherStorageKeystoreAesCbc(hasStrongBox));
 
     // we have a references to newer api that will fail load of app classes in old androids OS
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      addCipherStorageToMap(new CipherStorageKeystoreRsaEcb());
+      addCipherStorageToMap(new CipherStorageKeystoreRsaEcb(hasStrongBox));
     }
   }
 

@@ -1,5 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
@@ -10,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.oblador.keychain.KeychainModule;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -68,6 +71,21 @@ abstract public class CipherStorageBase implements CipherStorage {
   protected transient Cipher cachedCipher;
   /** Cached instance of the Keystore. */
   protected transient KeyStore cachedKeyStore;
+
+  public CipherStorageBase() {
+    super();
+    if (KeychainModule.deviceTests != null && KeychainModule.deviceTests.contains(getKeyName())) {
+      isSupportsSecureHardware = new AtomicBoolean(KeychainModule.deviceTests.getBoolean(getKeyName(), false));
+    }
+  }
+
+  public CipherStorageBase(boolean hasStrongBox) {
+    super();
+    isStrongboxAvailable = new AtomicBoolean(hasStrongBox);
+    if (KeychainModule.deviceTests != null && KeychainModule.deviceTests.contains(getKeyName())) {
+      isSupportsSecureHardware = new AtomicBoolean(KeychainModule.deviceTests.getBoolean(getKeyName(), false));
+    }
+  }
   //endregion
 
   //region Overrides
@@ -119,7 +137,20 @@ abstract public class CipherStorageBase implements CipherStorage {
       }
     }
 
+    persistSupportSecureHardware(isSupportsSecureHardware.get());
+
     return isSupportsSecureHardware.get();
+  }
+
+  protected void persistSupportSecureHardware(boolean hardwareSupport) {
+    SharedPreferences.Editor editor = KeychainModule.deviceTests.edit();
+    String keyName = getKeyName();
+    editor.putBoolean(keyName, hardwareSupport);
+    editor.apply();
+  }
+
+  private String getKeyName() {
+    return "hardware_" + Build.MODEL + "_" + this.getClass().getName();
   }
 
   /** {@inheritDoc} */

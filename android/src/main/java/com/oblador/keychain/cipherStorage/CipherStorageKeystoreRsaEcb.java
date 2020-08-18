@@ -49,7 +49,13 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
   public static final String TRANSFORMATION_RSA_ECB_PKCS1 =
     ALGORITHM_RSA + "/" + BLOCK_MODE_ECB + "/" + PADDING_PKCS1;
   /** Selected encryption key size. */
-  public static final int ENCRYPTION_KEY_SIZE = 3072;
+  public static final int ENCRYPTION_KEY_SIZE = 2048;
+
+
+  private boolean hasStrongBox;
+  public CipherStorageKeystoreRsaEcb(boolean hasStrongBox) {
+    super(hasStrongBox);
+  }
   //endregion
 
   //region Overrides
@@ -225,7 +231,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       .setEncryptionPaddings(PADDING_PKCS1)
       .setRandomizedEncryptionRequired(true)
       .setUserAuthenticationRequired(true)
-      .setUserAuthenticationValidityDurationSeconds(1)
+      .setUserAuthenticationValidityDurationSeconds(30)
       .setKeySize(ENCRYPTION_KEY_SIZE);
   }
 

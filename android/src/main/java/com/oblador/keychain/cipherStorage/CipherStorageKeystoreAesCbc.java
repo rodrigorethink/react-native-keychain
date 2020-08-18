@@ -92,6 +92,13 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
   //endregion
 
+  private boolean hasStrongBox;
+
+  public CipherStorageKeystoreAesCbc(boolean hasStrongBox) {
+    super();
+    this.hasStrongBox = hasStrongBox;
+  }
+
   //region Overrides
   @Override
   @NonNull
